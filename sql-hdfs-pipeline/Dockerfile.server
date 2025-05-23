@@ -1,0 +1,19 @@
+FROM p4-hdfs
+
+RUN pip install grpcio-tools==1.70.0 grpcio==1.70.0 protobuf==5.29.3 --break-system-packages
+RUN pip install pandas --break-system-packages
+RUN pip install pyarrow --break-system-packages
+RUN pip install sqlalchemy --break-system-packages
+RUN pip install mysql-connector-python --break-system-packages
+RUN pip install pymysql --break-system-packages
+RUN pip install requests --break-system-packages
+
+COPY client.py /client.py
+COPY server.py /
+COPY lender.proto /
+
+RUN python3 -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. lender.proto
+
+CMD export CLASSPATH=`$HADOOP_HOME/bin/hdfs classpath --glob` && \
+    python3 -u server.py
+

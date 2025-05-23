@@ -1,0 +1,25 @@
+FROM python:3.9-slim
+
+# Install git for dependencies
+RUN apt-get update && apt-get install -y git && apt-get clean
+
+WORKDIR /app
+
+# Copy requirements
+COPY docker-requirements.txt .
+RUN pip install --no-cache-dir -r docker-requirements.txt
+
+# Install Flask and gRPC dependencies
+RUN pip install --no-cache-dir flask grpcio grpcio-tools
+
+# Copy proto file
+COPY proto/property_lookup.proto .
+
+# Compile proto file
+RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. property_lookup.proto
+
+# Copy cache server
+COPY cache.py .
+
+# Run the server
+CMD ["python", "cache.py"]
